@@ -69,7 +69,8 @@ function sendmessage_json($openid ,$template_id ,$postid,$form_id,$total_fee,$fl
         
         if($flag=='1' || $flag=='3' )
         {
-            $page='pages/detail/detail?id='.$postid;
+            //$page='pages/detail/detail?id='.$postid;
+            $page= '/pages/index/index?path=/pages/detail/detail&id='.$postid;
 
         }
         elseif($flag=='2')

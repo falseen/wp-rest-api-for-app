@@ -54,7 +54,8 @@ function get_comments_json($postid,$limit,$page,$order)
 			$data["id"]=$comment->comment_ID;
 			$data["author_name"]=$comment->comment_author;
 			$author_url =$comment->comment_author_url;
-			$data["author_url"]=strpos($author_url, "wx.qlogo.cn")?$author_url:"../../images/gravatar.png";
+			$data["author_url"]=$author_url;
+			//$author_url:"../../images/gravatar.png";
 			$data["date"]=time_tran($comment->comment_date);
 			$data["content"]=$comment->comment_content;
 			$data["formId"]=$comment->formId;
