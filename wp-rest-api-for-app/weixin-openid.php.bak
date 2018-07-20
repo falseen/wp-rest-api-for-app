@@ -7,52 +7,6 @@ add_action( 'rest_api_init', function () {
   ) );
 } );
 
-add_action( 'rest_api_init', function () {
-    register_rest_route( 'watch-life-net/v1', 'weixin/updataUserInfo', array(
-      'methods' => 'POST',
-      'callback' => 'updataUserInfo'
-    ) );
-  } );
-
-
-function updataUserInfo($request){
-    global $wpdb;
-    $userdata = array(
-        'user_login'  =>  $request['openid'],
-        'nickname'=> $request['nickname'],
-        'user_nicename'=> $request['unionId'],
-        'display_name' => $request['avatarUrl'],
-        'user_pass'   =>  NULL 
-    );
-    if(!username_exists($request['openid'])){
-        $user_id = wp_insert_user($userdata);
-    }
-    else{
-        $openid = $request['openid'];
-        $sql = "SELECT ID FROM $wpdb->users WHERE user_login IN ('$openid')";
-        foreach($wpdb->get_results($sql) as $_user){
-            $ID = $_user->ID;
-         }
-        $userdata["ID"] =  $ID;
-        $user_id = wp_update_user($userdata);
-    }
-    if (is_wp_error( $user_id ) ) {
-                                
-        $result["code"]="success";
-        $result["message"]= "update userInfo error";
-        $result["status"]="500";                   
-        return $result;
-        
-    }
-    else
-    {
-        $result["code"]="success";
-        $result["message"]= "update userInfo success  ";
-        $result["status"]="200";
-        $result["openid"]=$openid;
-        return $result;
-    }
-}
 
 function getOpenid($request) {
     $js_code= $request['js_code'];
