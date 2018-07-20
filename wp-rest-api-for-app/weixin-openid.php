@@ -1,9 +1,18 @@
 <?php
 //获取用户的微信 openid
+
+//获取用户的微信 openid
 add_action( 'rest_api_init', function () {
-  register_rest_route( 'watch-life-net/v1', 'weixin/getopenid', array(
+    register_rest_route( 'watch-life-net/v1', 'weixin/getopenid', array(
+      'methods' => 'POST',
+      'callback' => 'getopenid'
+    ) );
+  } );
+
+add_action( 'rest_api_init', function () {
+  register_rest_route( 'watch-life-net/v1', 'weixin/getuseinfo', array(
     'methods' => 'POST',
-    'callback' => 'getOpenid'
+    'callback' => 'getuseinfo'
   ) );
 } );
 
@@ -54,7 +63,42 @@ function updataUserInfo($request){
     }
 }
 
-function getOpenid($request) {
+function getopenid($request){
+    $js_code= $request['code'];
+    $appid = get_option('wf_appid');
+    $appsecret = get_option('wf_secret'); 
+    $access_url = "https://api.weixin.qq.com/sns/jscode2session?appid=".$appid."&secret=".$appsecret."&js_code=".$js_code."&grant_type=authorization_code";
+    $access_result = https_request($access_url);
+    if($access_result !="ERROR")
+    {
+        $access_array = json_decode($access_result,true);
+        if(empty($access_array['errcode']))
+        {
+            $openid = $access_array['openid']; 
+            $sessionKey = $access_array['session_key'];
+            $result["openid"]=$openid;
+        
+        }else{
+            $result["code"]=$access_array['errcode'];
+            $result["message"]= $access_array['errmsg'];
+            $result["status"]="500";                   
+
+        }
+
+    } 
+    else{
+        $result["code"]="success";
+        $result["message"]= "https request error";
+        $result["status"]="500";                   
+
+    }
+    $response = new WP_REST_Response($result); 
+    // Add a custom status code
+    $response->set_status( 200 ); 
+    return $response;
+}
+
+function getuseinfo($request) {
     $js_code= $request['js_code'];
     $encryptedData=$request['encryptedData'];
     $iv=$request['iv'];
