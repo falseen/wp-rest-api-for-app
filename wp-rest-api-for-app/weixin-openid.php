@@ -10,7 +10,7 @@ add_action( 'rest_api_init', function () {
   } );
 
 add_action( 'rest_api_init', function () {
-  register_rest_route( 'watch-life-net/v1', 'weixin/getuseinfo', array(
+  register_rest_route( 'watch-life-net/v1', 'weixin/getuserinfo', array(
     'methods' => 'POST',
     'callback' => 'getuseinfo'
   ) );
