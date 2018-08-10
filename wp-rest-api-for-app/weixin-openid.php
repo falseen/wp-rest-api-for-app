@@ -158,14 +158,14 @@ function post_openid_json($js_code,$encryptedData,$iv,$avatarUrl,$nickname) {
                         if(!username_exists($openid))
                         {
                             $data =json_decode($data,true);
-                            $unionId = $data['unionId'];
+                            //$unionId = $data['unionId'];
                             
                             $userdata = array(
                                 'user_login'  =>  $openid,
                                 'nickname'=> $nickname,
-                                'user_nicename'=> $unionId,
+                                'user_nicename'=> $nickname,
                                 'display_name' => $avatarUrl,
-                                'user_pass'   =>  NULL 
+                                'user_pass'   =>  $openid 
                             );
 
                                 $user_id = wp_insert_user( $userdata ) ;                    

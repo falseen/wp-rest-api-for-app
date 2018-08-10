@@ -26,32 +26,76 @@ function custom_fields_rest_prepare_post( $data, $post, $request) {
     $_data['post_thumbnail_image_624']=$images['post_thumbnail_image_624'];
     $comments_count = wp_count_comments($post_id);
     
-    $pageviews = (int) get_post_meta( $post_id, 'wl_pageviews',true);
-    $_data['pageviews'] = $pageviews;
+   
     
     $_data['total_comments']=$comments_count->total_comments;
     $category =get_the_category($post_id);
     $_data['category_name'] =$category[0]->cat_name; 
+
+    //$date = str_replace(,"T"," ");
+
+    $post_date =$post->post_date;
+
+    $_data['date'] =time_tran($post_date);
+
     /*
     $content  =get_the_content();    
     $_content['rendered'] =$content;
     $_data['content']= $_content; 
     */
 
-    
-    $like_count = $wpdb->get_var("SELECT COUNT(1) FROM ".$wpdb->postmeta." where meta_value='like' and post_id=".$post_id);
-    $_data['like_count']= $like_count;    
+    $sql =$wpdb->prepare("SELECT COUNT(1) FROM ".$wpdb->postmeta." where meta_value='like' and post_id=%d",$post_id);
+    $like_count = $wpdb->get_var($sql);
+    $_data['like_count']= $like_count; 
+    $post_views = (int)get_post_meta($post_id, 'wl_pageviews', true);     
     $params = $request->get_params();
      if ( isset( $params['id'] ) ) {
 
-        $sql="SELECT meta_key , (SELECT display_name from ".$wpdb->users." WHERE user_login=substring(meta_key,2)) as avatarurl FROM ".$wpdb->postmeta." where meta_value='like' and post_id=".$post_id;
+        $sql=$wpdb->prepare("SELECT meta_key , (SELECT display_name from ".$wpdb->users." WHERE user_login=substring(meta_key,2)) as avatarurl FROM ".$wpdb->postmeta." where meta_value='like' and post_id=%d",$post_id);
         $likes = $wpdb->get_results($sql);
         $avatarurls =array();
         foreach ($likes as $like) {
             $_avatarurl['avatarurl']  =$like->avatarurl;   
             $avatarurls[] = $_avatarurl;        
         }
-        $_data['avatarurls']= $avatarurls;
+
+      $post_views =$post_views+1;  
+      if(!update_post_meta($post_id, 'wl_pageviews', $post_views))   
+      {  
+        add_post_meta($post_id, 'wl_pageviews', 1, true);  
+      } 
+      $_data['avatarurls']= $avatarurls;
+
+
+      date_default_timezone_set('Asia/Shanghai');
+      $fristday= date("Y-m-d H:i:s", strtotime("-5 year")); 
+      $today = date("Y-m-d H:i:s"); //获取今天日期时间
+      $tags= $_data["tags"];
+        if(count($tags)>0)
+        {
+          $tags=implode(",",$tags);
+          $sql="
+          SELECT DISTINCT ID, post_title
+          FROM ".$wpdb->posts." , ".$wpdb->term_relationships.", ".$wpdb->term_taxonomy."
+          WHERE ".$wpdb->term_taxonomy.".term_taxonomy_id =  ".$wpdb->term_relationships.".term_taxonomy_id
+          AND ID = object_id
+          AND taxonomy = 'post_tag'
+          AND post_status = 'publish'
+          AND post_type = 'post'
+          AND term_id IN (" . $tags . ")
+          AND ID != '" . $post_id . "'
+          AND post_date BETWEEN '".$fristday."' AND '".$today."' 
+          ORDER BY  RAND()
+          LIMIT 5";
+          $related_posts = $wpdb->get_results($sql);
+
+          $_data['related_posts'] = $related_posts;
+
+        }
+        else{
+          $_data['related_posts']=null;
+        }
+        
         
     }
     else 
@@ -60,6 +104,9 @@ function custom_fields_rest_prepare_post( $data, $post, $request) {
         unset($_data['author']); 
         unset($_data['excerpt']);
     }
+    $pageviews =$post_views ;   
+    $_data['pageviews'] = $pageviews;
+
     $category_id=$category[0]->term_id;
     $next_post = get_next_post($category_id, '', 'category');
     $previous_post = get_previous_post($category_id, '', 'category');
