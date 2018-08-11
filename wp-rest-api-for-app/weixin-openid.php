@@ -28,16 +28,17 @@ function updataUserInfo($request){
     global $wpdb;
     $userdata = array(
         'user_login'  =>  $request['openid'],
-        'nickname'=> $request['nickname'],
+        'nickname'=> $request['nickName'],
         'user_nicename'=> $request['unionId'],
         'display_name' => $request['avatarUrl'],
-        'user_pass'   =>  NULL 
+        'user_pass'   =>  $request['openid']
     );
+    $openid = $request['openid'];
     if(!username_exists($request['openid'])){
         $user_id = wp_insert_user($userdata);
     }
     else{
-        $openid = $request['openid'];
+        
         $sql = "SELECT ID FROM $wpdb->users WHERE user_login IN ('$openid')";
         foreach($wpdb->get_results($sql) as $_user){
             $ID = $_user->ID;
@@ -45,10 +46,10 @@ function updataUserInfo($request){
         $userdata["ID"] =  $ID;
         $user_id = wp_update_user($userdata);
     }
-    if (is_wp_error( $user_id ) ) {
-                                
-        $result["code"]="success";
-        $result["message"]= "update userInfo error";
+    if (is_wp_error( $user_id ) ) {                       
+        $result["code"]="error";
+        $result["message"]= "update userInfo error".var_dump($user_id);
+        //$result["message"] = var_dump($userdata);
         $result["status"]="500";                   
         return $result;
         
